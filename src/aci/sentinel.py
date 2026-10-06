@@ -57,8 +57,10 @@ def fetch_scene(bbox, start, end, out_dir, tag, tile=None):
     out.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(out / f"{tag}.npz", red=red, nir=nir, valid=valid_from_scl(scl),
                         transform=np.array(transform)[:6], crs=crs.to_string(),
-                        date=item.datetime.date().isoformat(), cloud=item.properties["eo:cloud_cover"])
-    print(f"{tag}: {item.datetime.date()} cloud={item.properties['eo:cloud_cover']:.1f}% shape={red.shape} -> {out / (tag + '.npz')}")
+                        date=item.datetime.date().isoformat(), cloud=item.properties["eo:cloud_cover"],
+                        baseline=item.properties["s2:processing_baseline"], tile=item.properties["s2:mgrs_tile"])
+    print(f"{tag}: {item.datetime.date()} cloud={item.properties['eo:cloud_cover']:.1f}% "
+          f"baseline={item.properties['s2:processing_baseline']} shape={red.shape} -> {out / (tag + '.npz')}")
     return item.properties["s2:mgrs_tile"]
 
 

@@ -1,6 +1,28 @@
 """Vegetation-index math. NDVI = (NIR - Red) / (NIR + Red); healthy crops are high, bare soil/stressed crops are low."""
 import numpy as np
 
+# From processing baseline 04.00 (January 2022) on, ESA adds 1000 to every Sentinel-2 L2A value so that
+# slightly negative reflectances can be stored. Older scenes (e.g. baseline 02.12 from 2021) have no offset.
+BOA_OFFSET = 1000
+
+
+def has_offset(baseline: str) -> bool:
+    return float(baseline) >= 4.0
+
+
+def remove_offset(dn: np.ndarray, baseline: str) -> np.ndarray:
+    """Raw Sentinel-2 numbers -> offset-free values (still x10000 reflectance). Only touches baseline 04.00+."""
+    x = dn.astype(np.float32)
+    return np.clip(x - BOA_OFFSET, 0, None) if has_offset(baseline) else x
+
+
+def scene_ndvi(scene: dict, name: str) -> np.ndarray:
+    """NDVI for one saved scene (dict with red, nir, baseline, date). Prints whether the offset was removed."""
+    baseline = str(scene["baseline"])
+    action = "removed +1000 offset" if has_offset(baseline) else "no offset to remove"
+    print(f"{name} ({scene['date']}): processing baseline {baseline} -> {action}")
+    return ndvi(remove_offset(scene["red"], baseline), remove_offset(scene["nir"], baseline))
+
 
 def ndvi(red: np.ndarray, nir: np.ndarray) -> np.ndarray:
     red, nir = red.astype(np.float32), nir.astype(np.float32)
