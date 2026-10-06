@@ -1,6 +1,6 @@
 import numpy as np
 
-from aci.ndvi import has_offset, ndvi, remove_offset, scene_ndvi, stress_mask, valid_from_scl
+from aci.ndvi import buffer_invalid, has_offset, ndvi, remove_offset, scene_ndvi, stress_mask, valid_from_scl
 
 
 def test_ndvi_values():
@@ -33,3 +33,12 @@ def test_scene_ndvi_same_field_gives_same_answer_in_both_baselines():
     assert abs(float(scene_ndvi(new, "new")[0]) - 0.5) < 1e-6
     # Without the fix the new scene would look much less green: (1300-1100)/(2400) = 0.083
     assert float(ndvi(new["red"], new["nir"])[0]) < 0.1
+
+
+def test_cloud_buffer_grows_invalid_area():
+    valid = np.ones((9, 9), bool)
+    valid[4, 4] = False  # one cloud pixel in the middle
+    buffered = buffer_invalid(valid, pixels=2)
+    assert not buffered[4, 6] and not buffered[2, 4]  # 2 px away: now unusable
+    assert buffered[4, 7] and buffered[0, 0]  # further away: still fine
+    assert (buffer_invalid(valid, 0) == valid).all()

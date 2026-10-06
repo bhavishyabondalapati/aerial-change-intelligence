@@ -9,6 +9,7 @@ shapely
 rasterio
 pyproj
 scikit-image
+scipy
 tqdm
 pytest
 pystac-client

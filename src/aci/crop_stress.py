@@ -7,7 +7,7 @@ import numpy as np
 from rasterio.transform import Affine
 
 from aci.geo import area_summary, mask_to_polygons
-from aci.ndvi import has_offset, scene_ndvi, stress_mask
+from aci.ndvi import buffer_invalid, has_offset, scene_ndvi, stress_mask
 
 
 def load(npz):
@@ -22,18 +22,18 @@ def crop_to(scene, h, w):
     return {k: (v[:h, :w] if v.ndim == 2 else v) for k, v in scene.items()}
 
 
-def run(data_dir, out_dir, drop=0.15):
+def run(data_dir, out_dir, drop=0.15, cloud_buffer=5):
     b, a = load(Path(data_dir) / "before.npz"), load(Path(data_dir) / "after.npz")
     h, w = min(b["red"].shape[0], a["red"].shape[0]), min(b["red"].shape[1], a["red"].shape[1])
     b, a = crop_to(b, h, w), crop_to(a, h, w)
     nb, na = scene_ndvi(b, "before"), scene_ndvi(a, "after")
-    valid = b["valid"] & a["valid"]
+    valid = buffer_invalid(b["valid"] & a["valid"], cloud_buffer)  # 5 px = 50 m around clouds
     mask, score = stress_mask(nb, na, valid, drop_threshold=drop)
     transform, crs = Affine(*b["transform"]), str(b["crs"])
     gdf = mask_to_polygons(mask, score, transform, crs, min_pixels=5)  # 5 px at 10 m = 0.05 ha
     summary = area_summary(gdf)
     summary.update(before_date=str(b["date"]), after_date=str(a["date"]), valid_fraction=float(valid.mean()),
-                   drop_threshold=drop,
+                   drop_threshold=drop, cloud_buffer_m=cloud_buffer * 10,
                    offset_removed={"before": has_offset(str(b["baseline"])), "after": has_offset(str(a["baseline"]))})
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -48,8 +48,9 @@ def main():
     ap.add_argument("--data", default="data/sentinel/godavari")
     ap.add_argument("--out", default="outputs/crop_stress")
     ap.add_argument("--drop", type=float, default=0.15)
+    ap.add_argument("--cloud-buffer", type=int, default=5, help="pixels around clouds to also ignore (10 m each)")
     args = ap.parse_args()
-    print(json.dumps(run(args.data, args.out, args.drop), indent=2))
+    print(json.dumps(run(args.data, args.out, args.drop, args.cloud_buffer), indent=2))
 
 
 if __name__ == "__main__":

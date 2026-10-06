@@ -1,5 +1,6 @@
 """Vegetation-index math. NDVI = (NIR - Red) / (NIR + Red); healthy crops are high, bare soil/stressed crops are low."""
 import numpy as np
+from scipy import ndimage
 
 # From processing baseline 04.00 (January 2022) on, ESA adds 1000 to every Sentinel-2 L2A value so that
 # slightly negative reflectances can be stored. Older scenes (e.g. baseline 02.12 from 2021) have no offset.
@@ -47,3 +48,10 @@ GOOD_SCL = (4, 5, 6, 7)
 
 def valid_from_scl(scl: np.ndarray) -> np.ndarray:
     return np.isin(scl, GOOD_SCL)
+
+
+def buffer_invalid(valid: np.ndarray, pixels: int = 5) -> np.ndarray:
+    """Also mark pixels within `pixels` of a cloud/shadow as unusable: the scene classification misses hazy cloud edges."""
+    if pixels <= 0:
+        return valid
+    return ~ndimage.binary_dilation(~valid, iterations=pixels)
