@@ -56,20 +56,22 @@ def normal_ndvi(ndvis, valids):
     return mean.astype(np.float32), std.astype(np.float32), count
 
 
-def anomaly_mask(ndvi_now, valid_now, mean, std, count, k=2.0, min_std=0.05, min_mean=0.3, min_years=3):
+def anomaly_mask(ndvi_now, valid_now, mean, std, count, k=2.0, min_std=0.05, min_drop=0.1, min_mean=0.3, min_years=3):
     """Flag pixels whose NDVI drop below normal is more than k times their usual year-to-year swing.
 
-    min_std stops a pixel that happened to be very steady for 3-4 years from being flagged over a tiny dip.
+    With only 3-4 baseline years a pixel's swing can look near zero by chance, so two guards apply:
+    min_std is the smallest swing we believe, and min_drop is the smallest NDVI drop worth flagging at all.
     min_mean keeps only pixels that are normally vegetated (not water, roads or towns).
     Returns (mask, z, score): z = drop in units of normal swing; score = z scaled to 0..1 (z of 4 -> 1.0).
     """
     sigma = np.maximum(np.nan_to_num(std, nan=min_std), min_std)
-    z = np.nan_to_num((mean - ndvi_now) / sigma, nan=0.0).astype(np.float32)
-    mask = valid_now & (count >= min_years) & (np.nan_to_num(mean) >= min_mean) & (z > k)
+    drop = np.nan_to_num(mean - ndvi_now, nan=0.0)
+    z = (drop / sigma).astype(np.float32)
+    mask = valid_now & (count >= min_years) & (np.nan_to_num(mean) >= min_mean) & (z > k) & (drop >= min_drop)
     return mask, z, np.clip(z / 4, 0, 1).astype(np.float32)
 
 
-def run(data_dir, out_dir, target=2025, k=2.0, cloud_buffer=5, min_years=3):
+def run(data_dir, out_dir, target=2025, k=2.0, cloud_buffer=5, min_years=3, min_std=0.05, min_drop=0.1):
     scenes = {int(p.stem): load(p) for p in sorted(Path(data_dir).glob("*.npz"))}
     if target not in scenes:
         raise FileNotFoundError(f"No {target}.npz in {data_dir}; run python -m aci.seasonal --fetch first")
@@ -87,7 +89,8 @@ def run(data_dir, out_dir, target=2025, k=2.0, cloud_buffer=5, min_years=3):
     valid = {y: buffer_invalid(s["valid"], cloud_buffer) for y, s in scenes.items()}
 
     mean, std, count = normal_ndvi(np.stack([ndvi[y] for y in baseline_years]), np.stack([valid[y] for y in baseline_years]))
-    mask, z, score = anomaly_mask(ndvi[target], valid[target], mean, std, count, k=k, min_years=min_years)
+    mask, z, score = anomaly_mask(ndvi[target], valid[target], mean, std, count, k=k, min_std=min_std,
+                                  min_drop=min_drop, min_years=min_years)
 
     t = scenes[target]
     gdf = mask_to_polygons(mask, score, Affine(*t["transform"]), str(t["crs"]), min_pixels=5)
@@ -95,7 +98,7 @@ def run(data_dir, out_dir, target=2025, k=2.0, cloud_buffer=5, min_years=3):
     summary = area_summary(gdf)
     summary.update(
         target_year=target, baseline_years=baseline_years, window=f"{WINDOW[0]}..{WINDOW[1]}", tile=tiles.pop(),
-        reference_day=REFERENCE_DAY, k_sigma=k, cloud_buffer_m=cloud_buffer * 10,
+        reference_day=REFERENCE_DAY, k_sigma=k, min_swing=min_std, min_drop=min_drop, cloud_buffer_m=cloud_buffer * 10,
         comparable_area_ha=float(comparable.sum() * 0.01),  # 10 m pixels = 0.01 ha
         flagged_fraction_of_comparable=float(mask.sum() / max(comparable.sum(), 1)),
         mean_ndvi_normal=float(mean[comparable].mean()) if comparable.any() else None,

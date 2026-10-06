@@ -69,3 +69,14 @@ def test_run_refuses_too_few_baseline_years(tmp_path):
         _scene(tmp_path / f"{year}.npz", 0.7, "05.11", year=year)
     with pytest.raises(RuntimeError, match="baseline years"):
         run(tmp_path, tmp_path / "out")
+
+
+def test_small_drop_not_flagged_even_if_pixel_is_unusually_steady():
+    # Normal 0.70 with swing 0.02 (floored to 0.05): a 0.11 drop is z = 2.2 -> flagged, a 0.09 drop is z = 1.8 + below 0.1
+    mean, std, count = np.full(3, 0.7, np.float32), np.full(3, 0.02, np.float32), np.full(3, 4)
+    now = np.array([0.59, 0.61, 0.62])
+    mask, z, _ = anomaly_mask(now, np.ones(3, bool), mean, std, count, k=2, min_std=0.05, min_drop=0.1)
+    assert mask.tolist() == [True, False, False]
+    # With a looser k the 0.09 drop passes the swing test, but the 0.1 minimum drop still blocks it
+    mask, _, _ = anomaly_mask(now, np.ones(3, bool), mean, std, count, k=1.5, min_std=0.05, min_drop=0.1)
+    assert mask.tolist() == [True, False, False]
