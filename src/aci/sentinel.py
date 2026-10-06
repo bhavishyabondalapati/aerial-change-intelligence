@@ -22,17 +22,23 @@ def covers(item, bbox):
     return l <= bbox[0] and b <= bbox[1] and r >= bbox[2] and t >= bbox[3]
 
 
-def find_best_scene(bbox, start, end, max_cloud=20, tile=None):
-    """Least-cloudy Sentinel-2 L2A scene fully covering the bbox between two dates (optionally in a given MGRS tile)."""
+def find_scenes(bbox, start, end, max_cloud=20, tile=None):
+    """Sentinel-2 L2A scenes fully covering the bbox between two dates, least cloudy first (optionally one MGRS tile)."""
     catalog = pystac_client.Client.open(CATALOG, modifier=pc.sign_inplace)
     items = catalog.search(
         collections=["sentinel-2-l2a"], bbox=bbox, datetime=f"{start}/{end}",
         query={"eo:cloud_cover": {"lt": max_cloud}},
     ).item_collection()
     items = [i for i in items if covers(i, bbox) and (tile is None or i.properties["s2:mgrs_tile"] == tile)]
-    if len(items) == 0:
+    return sorted(items, key=lambda i: i.properties["eo:cloud_cover"])
+
+
+def find_best_scene(bbox, start, end, max_cloud=20, tile=None):
+    """Least-cloudy scene fully covering the bbox; raises if there is none."""
+    items = find_scenes(bbox, start, end, max_cloud, tile)
+    if not items:
         raise RuntimeError(f"No Sentinel-2 scene fully covering the area under {max_cloud}% cloud for {start}..{end}; widen the dates")
-    return min(items, key=lambda i: i.properties["eo:cloud_cover"])
+    return items[0]
 
 
 def read_band(item, band, bbox, out_shape=None):
@@ -47,21 +53,30 @@ def read_band(item, band, bbox, out_shape=None):
         return arr, transform, src.crs
 
 
-def fetch_scene(bbox, start, end, out_dir, tag, tile=None):
-    """Download one scene; returns its MGRS tile so the second date can use the exact same grid."""
-    item = find_best_scene(bbox, start, end, tile=tile)
+def read_scene(item, bbox):
+    """Red, NIR and a usable-pixel mask for the bbox, plus the metadata needed later (grid, date, processing baseline)."""
     red, transform, crs = read_band(item, "B04", bbox)
     nir, _, _ = read_band(item, "B08", bbox, out_shape=red.shape)
     scl, _, _ = read_band(item, "SCL", bbox, out_shape=red.shape)  # 20m -> resampled to 10m grid
-    out = Path(out_dir)
-    out.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(out / f"{tag}.npz", red=red, nir=nir, valid=valid_from_scl(scl),
-                        transform=np.array(transform)[:6], crs=crs.to_string(),
-                        date=item.datetime.date().isoformat(), cloud=item.properties["eo:cloud_cover"],
-                        baseline=item.properties["s2:processing_baseline"], tile=item.properties["s2:mgrs_tile"])
-    print(f"{tag}: {item.datetime.date()} cloud={item.properties['eo:cloud_cover']:.1f}% "
-          f"baseline={item.properties['s2:processing_baseline']} shape={red.shape} -> {out / (tag + '.npz')}")
-    return item.properties["s2:mgrs_tile"]
+    p = item.properties
+    return dict(red=red, nir=nir, valid=valid_from_scl(scl), transform=np.array(transform)[:6], crs=crs.to_string(),
+                date=item.datetime.date().isoformat(), cloud=p["eo:cloud_cover"],
+                baseline=p["s2:processing_baseline"], tile=p["s2:mgrs_tile"])
+
+
+def save_scene(scene, path):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(path, **scene)
+    print(f"{path.stem}: {scene['date']} cloud={scene['cloud']:.1f}% baseline={scene['baseline']} "
+          f"usable={scene['valid'].mean():.0%} shape={scene['red'].shape} -> {path}")
+
+
+def fetch_scene(bbox, start, end, out_dir, tag, tile=None):
+    """Download one scene; returns its MGRS tile so the second date can use the exact same grid."""
+    scene = read_scene(find_best_scene(bbox, start, end, tile=tile), bbox)
+    save_scene(scene, Path(out_dir) / f"{tag}.npz")
+    return scene["tile"]
 
 
 def main():
