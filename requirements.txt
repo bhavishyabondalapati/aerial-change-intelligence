@@ -1,0 +1,17 @@
+torch>=2.4
+torchvision>=0.19
+numpy
+pillow
+matplotlib
+pandas
+geopandas
+shapely
+rasterio
+pyproj
+scikit-image
+tqdm
+pytest
+pystac-client
+planetary-computer
+rioxarray
+stackstac
