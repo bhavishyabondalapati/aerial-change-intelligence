@@ -108,6 +108,14 @@ Outputs land in `outputs/` (GeoJSON polygons, `area_summary.json`, overlay pictu
 - **Area needs a metric CRS:** lat/lon degrees are not metres, so GeoPandas data is reprojected (e.g. UTM) before measuring area.
 - **NDVI:** (NIR - Red) / (NIR + Red); healthy plants reflect lots of near-infrared, so high NDVI means green vegetation.
 
+## Roadmap
+
+- [ ] **Fairer crop-stress comparison (next for the crop track):** compare the *same* dry-season window (Dec to Mar) in two different years, e.g. Dec-Mar 2023-24 vs 2024-25. Same crop calendar means NDVI differences point to year-on-year health, not just harvest timing. Add a baseline of "normal" NDVI per date and flag pixels well below it.
+- [ ] Phase 7: Gemini report grounded in public agriculture guides
+- [ ] Phase 8: validation step that checks the report's numbers against the metrics
+- [ ] Phase 9: Streamlit dashboard
+- [ ] Phase 5 (optional): xBD building damage with real coordinates
+
 ## Honest limitations
 
 - **LEVIR-CD has no real coordinates.** Its area figures assume 0.5 m per pixel on a local grid; they are real-scale but not located on a map. xBD (optional later) has true coordinates.
