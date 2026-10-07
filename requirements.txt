@@ -16,3 +16,6 @@ pystac-client
 planetary-computer
 rioxarray
 stackstac
+google-genai
+pypdf
+python-dotenv
