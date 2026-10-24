@@ -1,6 +1,6 @@
 import numpy as np
 
-from aci.ndvi import buffer_invalid, has_offset, ndvi, remove_offset, scene_ndvi, stress_mask, valid_from_scl
+from aci.farms.ndvi import buffer_invalid, has_offset, ndvi, remove_offset, scene_ndvi, stress_mask, valid_from_scl
 
 
 def test_ndvi_values():

@@ -9,7 +9,7 @@ import rasterio
 from rasterio.windows import from_bounds
 from rasterio.warp import transform_bounds
 
-from aci.ndvi import valid_from_scl
+from aci.farms.ndvi import valid_from_scl
 
 # Godavari delta, Andhra Pradesh, India: rice paddies and aquaculture near Amalapuram (lon_min, lat_min, lon_max, lat_max)
 GODAVARI_AOI = (81.95, 16.55, 82.10, 16.70)

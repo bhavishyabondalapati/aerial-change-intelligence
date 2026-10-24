@@ -2,7 +2,7 @@ import json
 
 import numpy as np
 
-from aci.rag import build_index, chunk_text, load_index, retrieve
+from aci.report.rag import build_index, chunk_text, load_index, retrieve
 
 VOCAB = ["drought", "water", "yellow", "nitrogen", "pond", "fish", "blast"]
 
@@ -35,7 +35,7 @@ def test_retrieve_finds_the_chunk_about_the_question():
 
 
 def test_index_round_trip(tmp_path, monkeypatch):
-    monkeypatch.setattr("aci.rag.read_pdf_pages", lambda p: [(1, "Blast disease of rice. " * 20), (2, "Drought water saving")])
+    monkeypatch.setattr("aci.report.rag.read_pdf_pages", lambda p: [(1, "Blast disease of rice. " * 20), (2, "Drought water saving")])
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "guide.pdf").write_bytes(b"")
     chunks, vectors = build_index(tmp_path / "docs", tmp_path / "index", fake_embed)
@@ -47,7 +47,7 @@ def test_index_round_trip(tmp_path, monkeypatch):
 
 
 def test_index_build_resumes_from_cache(tmp_path, monkeypatch):
-    monkeypatch.setattr("aci.rag.read_pdf_pages", lambda p: [(1, "Drought water saving"), (2, "Yellow nitrogen")])
+    monkeypatch.setattr("aci.report.rag.read_pdf_pages", lambda p: [(1, "Drought water saving"), (2, "Yellow nitrogen")])
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "guide.pdf").write_bytes(b"")
     calls = []

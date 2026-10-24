@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from rasterio.transform import Affine
 
-from aci.crop_stress import crop_to, load
-from aci.geo import area_summary, mask_to_polygons
-from aci.ndvi import buffer_invalid, has_offset, scene_ndvi
+from aci.farms.crop_stress import crop_to, load
+from aci.common.geo import area_summary, mask_to_polygons
+from aci.farms.ndvi import buffer_invalid, has_offset, scene_ndvi
 
 WINDOW = ("02-01", "03-10")
 REFERENCE_DAY = "03-01"  # within the window, prefer the clear scene nearest this date so every year is at the same crop stage
@@ -28,7 +28,7 @@ def fetch_year(year, bbox, out_dir, tile=None, min_usable=0.6, tries=5):
 
     Catalog cloud cover is for the whole 110 km tile, so up to `tries` candidates are checked against the area itself.
     """
-    from aci.sentinel import find_scenes, read_scene, save_scene  # needs network packages; keep tests independent
+    from aci.farms.sentinel import find_scenes, read_scene, save_scene  # needs network packages; keep tests independent
 
     start, end = f"{year}-{WINDOW[0]}", f"{year}-{WINDOW[1]}"
     ref = date.fromisoformat(f"{year}-{REFERENCE_DAY}")
@@ -74,7 +74,7 @@ def anomaly_mask(ndvi_now, valid_now, mean, std, count, k=2.0, min_std=0.05, min
 def run(data_dir, out_dir, target=2025, k=2.0, cloud_buffer=5, min_years=3, min_std=0.05, min_drop=0.1):
     scenes = {int(p.stem): load(p) for p in sorted(Path(data_dir).glob("*.npz"))}
     if target not in scenes:
-        raise FileNotFoundError(f"No {target}.npz in {data_dir}; run python -m aci.seasonal --fetch first")
+        raise FileNotFoundError(f"No {target}.npz in {data_dir}; run python -m aci.farms.seasonal --fetch first")
     baseline_years = [y for y in scenes if y < target]
     if len(baseline_years) < min_years:
         raise RuntimeError(f"Only {len(baseline_years)} clear baseline years ({baseline_years}); need at least {min_years}")
@@ -146,7 +146,7 @@ def plot(ndvi, valid, mean, std, mask, score, target, path):
 
 
 def main():
-    from aci.sentinel import GODAVARI_AOI
+    from aci.farms.sentinel import GODAVARI_AOI
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--fetch", action="store_true", help="download the yearly scenes first")

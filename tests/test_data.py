@@ -1,6 +1,6 @@
 import numpy as np
 
-from aci.data import normalize, random_crop_flip
+from aci.buildings.data import normalize, random_crop_flip
 
 
 def test_normalize_shape():

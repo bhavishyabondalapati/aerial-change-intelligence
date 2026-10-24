@@ -10,10 +10,10 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 
-from aci.data import LevirCD
-from aci.device import get_device
-from aci.metrics import confusion, expected_calibration_error, scores
-from aci.model import SiameseUNet
+from aci.buildings.data import LevirCD
+from aci.common.device import get_device
+from aci.buildings.metrics import confusion, expected_calibration_error, scores
+from aci.buildings.model import SiameseUNet
 
 
 def loss_fn(logits, y):

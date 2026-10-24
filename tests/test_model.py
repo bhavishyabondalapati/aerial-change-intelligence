@@ -1,6 +1,6 @@
 import torch
 
-from aci.model import SiameseUNet
+from aci.buildings.model import SiameseUNet
 
 
 def test_output_shape_and_identical_inputs():

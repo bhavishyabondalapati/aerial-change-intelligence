@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from aci.geo import area_summary, mask_to_polygons, pixel_size_transform
-from aci.predict import load_model, predict_probability
+from aci.common.geo import area_summary, mask_to_polygons, pixel_size_transform
+from aci.buildings.predict import load_model, predict_probability
 
 PIXEL_SIZE_M = 0.5  # LEVIR-CD ground resolution; the images carry no real coordinates
 

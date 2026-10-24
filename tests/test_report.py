@@ -2,8 +2,8 @@ import json
 
 import numpy as np
 
-from aci.rag import build_index
-from aci.report import write_report
+from aci.report.rag import build_index
+from aci.report.report import write_report
 from test_rag import fake_embed
 
 
@@ -12,7 +12,7 @@ def _setup(tmp_path, monkeypatch):
     (out / "seasonal").mkdir(parents=True)
     (out / "metrics.json").write_text(json.dumps({"f1": 0.898, "iou": 0.815}))
     (out / "seasonal" / "seasonal_summary.json").write_text(json.dumps({"area_ha": 3005.15, "target_year": 2025}))
-    monkeypatch.setattr("aci.rag.read_pdf_pages", lambda p: [(4, "During drought, irrigate at critical stages and save water."),
+    monkeypatch.setattr("aci.report.rag.read_pdf_pages", lambda p: [(4, "During drought, irrigate at critical stages and save water."),
                                                             (9, "Yellow leaves can mean nitrogen deficiency.")])
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "guide.pdf").write_bytes(b"")

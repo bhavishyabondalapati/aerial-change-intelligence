@@ -6,14 +6,14 @@ from pathlib import Path
 import numpy as np
 from rasterio.transform import Affine
 
-from aci.geo import area_summary, mask_to_polygons
-from aci.ndvi import buffer_invalid, has_offset, scene_ndvi, stress_mask
+from aci.common.geo import area_summary, mask_to_polygons
+from aci.farms.ndvi import buffer_invalid, has_offset, scene_ndvi, stress_mask
 
 
 def load(npz):
     z = np.load(npz)
     if "baseline" not in z.files:
-        raise ValueError(f"{npz} has no processing baseline (downloaded by an older version); re-run python -m aci.sentinel")
+        raise ValueError(f"{npz} has no processing baseline (downloaded by an older version); re-run python -m aci.farms.sentinel")
     return {k: z[k] for k in z.files}
 
 

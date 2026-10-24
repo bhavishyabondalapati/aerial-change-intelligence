@@ -7,9 +7,9 @@ import numpy as np
 import torch
 from PIL import Image
 
-from aci.data import normalize
-from aci.device import get_device
-from aci.model import SiameseUNet
+from aci.buildings.data import normalize
+from aci.common.device import get_device
+from aci.buildings.model import SiameseUNet
 
 
 def load_model(ckpt="checkpoints/best.pt", device=None):

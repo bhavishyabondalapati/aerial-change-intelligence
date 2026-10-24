@@ -1,6 +1,6 @@
 import numpy as np
 
-from aci.geo import area_summary, mask_to_polygons, pixel_size_transform
+from aci.common.geo import area_summary, mask_to_polygons, pixel_size_transform
 
 
 def test_area_from_pixels():

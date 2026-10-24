@@ -3,7 +3,7 @@ import json
 import numpy as np
 import pytest
 
-from aci.seasonal import anomaly_mask, normal_ndvi, run
+from aci.farms.seasonal import anomaly_mask, normal_ndvi, run
 
 
 def test_normal_ndvi_ignores_cloudy_years():

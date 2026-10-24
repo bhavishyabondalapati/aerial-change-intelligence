@@ -2,14 +2,14 @@
 
 Grounding rules: numbers may only come from FACTS (the JSON outputs), advice must cite a numbered guide passage,
 and the Sources list is written by this code, not by the model. Everything the model saw is saved to context.json
-so the validation step (aci.validate) can check the report against exactly that.
+so the validation step (aci.report.validate) can check the report against exactly that.
 """
 import argparse
 import json
 import os
 from pathlib import Path
 
-from aci.rag import gemini_embedder, load_index, retrieve
+from aci.report.rag import gemini_embedder, load_index, retrieve
 
 GEN_MODEL = "gemini-3.8-flash"  # gemini-2.5-flash is no longer offered to new API keys
 

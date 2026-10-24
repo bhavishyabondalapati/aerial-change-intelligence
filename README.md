@@ -85,18 +85,18 @@ All commands run from the project root:
 export PYTHONPATH=src
 
 # Building change
-python -m aci.train --epochs 30          # about 15 minutes on an M4 Pro
-python -m aci.analyze data/raw/levir-cd/A/test_10.png data/raw/levir-cd/B/test_10.png
+python -m aci.buildings.train --epochs 30  # about 15 minutes on an M4 Pro
+python -m aci.buildings.analyze data/raw/levir-cd/A/test_10.png data/raw/levir-cd/B/test_10.png
 
 # Crop track
-python -m aci.sentinel                   # Godavari delta, Dec 2024 vs Mar 2025
-python -m aci.crop_stress && python -m aci.viz
-python -m aci.seasonal --fetch           # 2021-2025, Feb 1 - Mar 10
+python -m aci.farms.sentinel               # Godavari delta, Dec 2024 vs Mar 2025
+python -m aci.farms.crop_stress && python -m aci.farms.viz
+python -m aci.farms.seasonal --fetch       # 2021-2025, Feb 1 - Mar 10
 
 # Report (requires GEMINI_API_KEY and guide PDFs in data/docs/)
-python -m aci.rag                        # build the embedding index
-python -m aci.report
-python -m aci.validate                   # add --strict to fail on unverified numbers
+python -m aci.report.rag                   # build the embedding index
+python -m aci.report.report
+python -m aci.report.validate              # add --strict to fail on unverified numbers
 ```
 
 Outputs are written to `outputs/` (GeoJSON polygons, JSON summaries, overlay images, `report/report.md`, `report/review.md`). The guide PDFs used for retrieval (ICAR-CRIDA East Godavari contingency plan, PhilRice rice disorders field guide, FAO *Save and Grow*) are not redistributed.
@@ -118,22 +118,26 @@ Tests cover metrics, the model, data loading, polygon/area conversion, NDVI rule
 │   ├── godavari_ndvi.png    Two-date crop-track figure
 │   └── test_metrics.json    LEVIR-CD test-set metrics
 ├── src/aci/
-│   ├── device.py            Selects the Apple GPU (mps) when available
-│   ├── data.py              LEVIR-CD loader; random crops, flips, and before/after swaps
-│   ├── model.py             Siamese U-Net (shared ResNet18 encoder, U-Net decoder)
-│   ├── metrics.py           Precision, recall, F1, IoU, ECE
-│   ├── train.py             Training loop; saves checkpoints/best.pt and outputs/metrics.json
-│   ├── predict.py           Image pair to probability map, mask, and mean confidence
-│   ├── geo.py               Mask to polygons to area (m², ha)
-│   ├── analyze.py           Prediction, polygons, area, and overlay in one command
-│   ├── sentinel.py          Fetches cloud-filtered Sentinel-2 crops for two dates
-│   ├── ndvi.py              NDVI and the vegetation-loss rule
-│   ├── crop_stress.py       Two-date NDVI drop to loss polygons and hectares
-│   ├── seasonal.py          Per-pixel multi-year NDVI normal and anomaly detection
-│   ├── viz.py               Crop-track figure
-│   ├── rag.py               PDF chunking, Gemini embeddings, cosine retrieval
-│   ├── report.py            Grounded Gemini report from JSON facts and retrieved passages
-│   └── validate.py          Checks report numbers and dates against facts; flags claims
+│   ├── buildings/           Track A: building change on LEVIR-CD
+│   │   ├── data.py          LEVIR-CD loader; random crops, flips, and before/after swaps
+│   │   ├── model.py         Siamese U-Net (shared ResNet18 encoder, U-Net decoder)
+│   │   ├── metrics.py       Precision, recall, F1, IoU, ECE
+│   │   ├── train.py         Training loop; saves checkpoints/best.pt and outputs/metrics.json
+│   │   ├── predict.py       Image pair to probability map, mask, and mean confidence
+│   │   └── analyze.py       Prediction, polygons, area, and overlay in one command
+│   ├── farms/               Track B: Sentinel-2 crop track
+│   │   ├── sentinel.py      Fetches cloud-filtered Sentinel-2 crops for two dates
+│   │   ├── ndvi.py          NDVI and the vegetation-loss rule
+│   │   ├── crop_stress.py   Two-date NDVI drop to loss polygons and hectares
+│   │   ├── seasonal.py      Per-pixel multi-year NDVI normal and anomaly detection
+│   │   └── viz.py           Crop-track figure
+│   ├── report/              Track C: grounded report and fact-check
+│   │   ├── rag.py           PDF chunking, Gemini embeddings, cosine retrieval
+│   │   ├── report.py        Grounded Gemini report from JSON facts and retrieved passages
+│   │   └── validate.py      Checks report numbers and dates against facts; flags claims
+│   └── common/              Shared by more than one track
+│       ├── geo.py           Mask to polygons to area (m², ha)
+│       └── device.py        Selects the Apple GPU (mps) when available
 ├── tests/                   pytest suite
 ├── data/                    Datasets, Sentinel-2 crops, guide PDFs, index (not tracked)
 └── outputs/, checkpoints/   Generated results and model weights (not tracked)

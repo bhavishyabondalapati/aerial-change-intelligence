@@ -1,4 +1,4 @@
-from aci.validate import validate
+from aci.report.validate import validate
 
 FACTS = {
     "change_detection_test_metrics": {"f1": 0.898020941966479, "precision": 0.9077, "n_images": 128},

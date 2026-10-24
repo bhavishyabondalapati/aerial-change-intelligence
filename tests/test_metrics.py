@@ -1,6 +1,6 @@
 import numpy as np
 
-from aci.metrics import confusion, expected_calibration_error, scores
+from aci.buildings.metrics import confusion, expected_calibration_error, scores
 
 
 def test_perfect_prediction():
