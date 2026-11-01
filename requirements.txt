@@ -1,7 +1,7 @@
 torch>=2.4
 torchvision>=0.19
 numpy
-pillow
+pillow>=13.0.0
 matplotlib
 pandas
 geopandas
@@ -17,5 +17,10 @@ planetary-computer
 rioxarray
 stackstac
 google-genai
-pypdf
+pypdf>=6.21.4
 python-dotenv
+
+# Security floors for transitive dependencies (known vulnerabilities below these versions)
+certifi>=2026.10.18
+pyasn1>=0.6.5
+filelock>=4.2.1

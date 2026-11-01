@@ -117,6 +117,7 @@ Tests cover metrics, the model, data loading, polygon/area conversion, NDVI rule
 
 ```
 ├── .env.example             Gemini API key placeholder
+├── LICENSE
 ├── requirements.txt
 ├── docs/
 │   ├── godavari_ndvi.png    Two-date crop-track figure
@@ -169,3 +170,9 @@ Tests cover metrics, the model, data loading, polygon/area conversion, NDVI rule
 - **Polygonization** is slow for masks with tens of thousands of small regions; labeling regions once with `scipy.ndimage.label` would fix this.
 - `seasonal.py` loads every `.npz` file in its data folder, so stale files from earlier runs can enter the baseline.
 - Planned: xBD building damage with real coordinates, and a dashboard.
+
+## License
+
+Code is released under the MIT License; see [LICENSE](LICENSE).
+
+Sentinel-2 imagery and the figures derived from it (such as `docs/godavari_ndvi.png`) contain modified Copernicus Sentinel data (2021–2025), accessed through Microsoft Planetary Computer. LEVIR-CD is not redistributed here.
